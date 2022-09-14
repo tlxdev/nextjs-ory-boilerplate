@@ -5,6 +5,7 @@ import SessionContext from "../utils/SessionContext";
 
 const Home = () => {
   const { session } = useContext(SessionContext);
+
   return (
     <div className={styles.container}>
       <Head>
@@ -19,6 +20,13 @@ const Home = () => {
         <h1 className={styles.title}>
           <a href="/api/.ory/ui/login">Login with Ory</a>
         </h1>
+
+        {!session && (
+          <p className={styles.description}>
+            No session. Please login from above and session details will be
+            displayed here.
+          </p>
+        )}
 
         {session && (
           <>
