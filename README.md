@@ -4,6 +4,8 @@ Ory documentation seemed to assume NextJS is a SPA-type library.
 
 Use this as a base to properly utilize NextJS and handle sessions serverside, not clientside. 
 
+The magic happens in _app.js
+
 # Prerequisites
 Create a .env file with following contents:
 
