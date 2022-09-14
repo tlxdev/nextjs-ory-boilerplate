@@ -3,7 +3,6 @@ import "../styles/globals.css";
 import App from "next/app";
 
 import SessionContext from "../utils/SessionContext";
-import { useMemo, useState } from "react";
 
 const AppProvider = ({ children, initialData = {} }) => {
   return (
@@ -27,13 +26,18 @@ MyApp.getInitialProps = async (appContext) => {
     return __NEXT_DATA__.props.pageProps;
   }
   const cookies = appContext.ctx.req.cookies;
-  if (cookies) {
+  if (cookies && !!Object.entries(cookies)) {
     try {
-      // Map incoming client cookies and use them serverside
+      // Use clients session cookie to fetch session serverside
       const objectToCookie = Object.entries(cookies)
         .filter(([key, value]) => key.includes("ory_session"))
-        .map(([k, v]) => [k, v].join("="))
+        .map(([key, value]) => [key, value].join("="))
         .join("; ");
+
+      // Some cookies exist, but no session cookie => return null session
+      if (!objectToCookie) {
+        return { ...appProps, contextData: { session: null } };
+      }
 
       // Fetch session details in backend using Ory API
 
@@ -45,9 +49,11 @@ MyApp.getInitialProps = async (appContext) => {
           },
         }
       );
+
       if (sessionRequest.status !== 200) {
-        return { response: null, logoutUrl: null };
+        throw Error("Failed to fetch session from Ory");
       }
+
       const response = await sessionRequest.json();
 
       // Return session details to be used in UI
@@ -57,8 +63,6 @@ MyApp.getInitialProps = async (appContext) => {
           ...appProps?.pageProps,
           contextData: {
             session: response,
-            sessionCookie: objectToCookie,
-            logoutUrl: null,
           },
         },
       };
@@ -67,7 +71,7 @@ MyApp.getInitialProps = async (appContext) => {
       console.error(error);
     }
   }
-  return { ...appProps, contextData: { session: null, logoutUrl: null } };
+  return { ...appProps, contextData: { session: null } };
 };
 
 export default MyApp;
